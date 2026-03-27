@@ -1,0 +1,88 @@
+# Core
+fastapi==0.104.1
+uvicorn[standard]==0.24.0.post1
+pydantic==2.5.2
+pydantic-settings==2.1.0
+python-multipart
+python-dotenv
+aiohttp
+
+# Voice
+whisper-timestamped
+coqui-tts
+gTTS
+pydub
+kokoro>=0.3.4          # Dual-streaming on-device TTS (sub-500ms FTTS)
+soundfile>=0.12.0      # Required by kokoro for audio I/O
+
+# LiveKit WebRTC voice transport
+livekit>=0.11.0
+livekit-agents>=0.8.0
+livekit-plugins-silero>=0.6.0    # Silero VAD + semantic turn detection
+
+# AI/LLM
+transformers
+torch
+sentencepiece
+sentence-transformers
+llama-cpp-python
+chromadb
+langchain
+langchain-community
+langchain-core
+langgraph  # Added for Phase 10 Supervisor pattern
+langgraph-checkpoint-postgres
+neo4j      # Added for Phase 10 Graph Memory
+
+# Utils
+requests
+beautifulsoup4
+feedparser
+schedule
+aiofiles
+jose  # JWT
+passlib  # Password hashing
+bcrypt  # Password hashing
+cryptography  # Encryption
+redis  # Redis client
+playwright
+playwright-stealth
+httpx
+
+# Database
+sqlalchemy
+alembic
+asyncpg
+aiosqlite
+psycopg[binary]
+psycopg-pool
+
+# Integrations
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+msal
+icalendar
+paho-mqtt
+
+# Background Tasks
+celery
+mcp
+fastmcp
+langchain-redis
+
+# Performance
+numpy
+scipy
+
+# Monitoring
+psutil
+prometheus-client
+structlog
+python-json-logger
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+httpx  # For testing HTTP endpoints

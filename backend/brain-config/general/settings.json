@@ -1,0 +1,27 @@
+{
+  "category": "General Chat",
+  "description": "Everyday assistance, Q&A, and documentation",
+  "metadata": {
+    "version": "1.0.0",
+    "last_modified": "2026-03-11T00:00:00Z",
+    "created_by": "Claude AI Settings Manager",
+    "icon": "MessageSquare",
+    "color": "var(--accent-general)"
+  },
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api/v1",
+    "ANTHROPIC_AUTH_TOKEN": "",
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_MODEL": "meta-llama/llama-3.3-70b-instruct:free"
+  },
+  "model_config": {
+    "temperature": 0.7,
+    "max_tokens": 4096,
+    "system_prompt": "You are a helpful, harmless, and honest AI assistant."
+  },
+  "features": {
+    "artifacts_enabled": false,
+    "web_search": true,
+    "memory": true
+  }
+}

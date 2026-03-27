@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PKY AI Assistant Android Blueprint</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #050b14;
+            color: #e0f4ff;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        #root { min-height: 100vh; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.3); border-radius: 3px; }
+        
+        /* Animation keyframes */
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes glow { 0%,100%{opacity:0.7} 50%{opacity:1} }
+        @keyframes slideIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+        @keyframes fadeIn { to { opacity: 1; } }
+        
+        /* Utility classes */
+        .phase-btn:hover { filter: brightness(1.3) !important; transform: translateX(3px) !important; }
+        .module-card:hover { border-color: rgba(0,212,255,0.4) !important; background: rgba(0,212,255,0.07) !important; }
+        .tab-btn:hover { color: #00d4ff !important; }
+        .trow:hover td { background: rgba(0,212,255,0.04) !important; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const phases = [
+          {
+            id: 1, code: "PHASE-01", title: "Core AI Brain", subtitle: "Intelligence & Voice Engine",
+            color: "#00d4ff", icon: "⬡", eta: "Month 1–2", status: "FOUNDATION",
+            modules: [
+              { name: "LLM Engine", detail: "Claude API / Gemini 1.5 Pro — multi-modal reasoning core", tag: "AI" },
+              { name: "Wake Word", detail: "Porcupine SDK — offline 'Hey PKY AI Assistant' detection", tag: "VOICE" },
+              { name: "Speech-to-Text", detail: "OpenAI Whisper (on-device) — multi-language", tag: "VOICE" },
+              { name: "Text-to-Speech", detail: "ElevenLabs neural voice — PKY AI Assistant persona", tag: "VOICE" },
+              { name: "Intent Router", detail: "LangChain agent graph — classifies tasks", tag: "NLP" },
+              { name: "Context Memory", detail: "Sliding window + vector DB summary", tag: "MEMORY" },
+            ],
+            arch: "Android App ↔ LLM API ↔ Tool Dispatcher ↔ Response Synthesizer",
+            kpi: "< 800ms response latency · 97% intent accuracy"
+          },
+          {
+            id: 2, code: "PHASE-02", title: "System Integration", subtitle: "Deep Android OS Control",
+            color: "#7c3aed", icon: "⬡", eta: "Month 2–3", status: "INTEGRATION",
+            modules: [
+              { name: "Accessibility Engine", detail: "AccessibilityService API — read & interact with any app", tag: "AUTO" },
+              { name: "Notification Hub", detail: "NotificationListenerService — intercept alerts", tag: "SYS" },
+              { name: "Screen Vision", detail: "MediaProjection + Vision AI — understand screen content", tag: "VISION" },
+              { name: "Call & SMS Brain", detail: "TelecomManager + auto-reply templates", tag: "COMM" },
+              { name: "Contacts IQ", detail: "Smart contact linking — relationship context", tag: "CRM" },
+              { name: "File Ops Agent", detail: "Scoped storage + PKY AI Assistant-indexed file search", tag: "FILES" },
+            ],
+            arch: "OS Event Bus → PKY AI Assistant Core → Action Executor → Feedback Loop",
+            kpi: "Full device control · Zero-tap task execution"
+          },
+          {
+            id: 3, code: "PHASE-03", title: "Task Execution Suite", subtitle: "Real-World Action Layer",
+            color: "#059669", icon: "⬡", eta: "Month 3–4", status: "AUTOMATION",
+            modules: [
+              { name: "Email Command", detail: "Gmail API — draft, send, summarize, categorize", tag: "EMAIL" },
+              { name: "Calendar Ops", detail: "Google Calendar API — schedule, conflict detection", tag: "TIME" },
+              { name: "Web Research", detail: "Puppeteer + RAG pipeline — browse, extract, summarize", tag: "WEB" },
+              { name: "Maps & Travel", detail: "Maps SDK — route planning, ETA alerts", tag: "GEO" },
+              { name: "Smart Shopping", detail: "Price tracking, wishlist management", tag: "SHOP" },
+              { name: "Media Control", detail: "Spotify / YouTube API — mood-based playback", tag: "MEDIA" },
+            ],
+            arch: "Task Parser → API Gateway → Execution Engine → Result Summarizer",
+            kpi: "Multi-step task chains · API-first architecture"
+          },
+          {
+            id: 4, code: "PHASE-04", title: "Memory & Intelligence", subtitle: "Personalization Engine",
+            color: "#dc2626", icon: "⬡", eta: "Month 4–5", status: "COGNITION",
+            modules: [
+              { name: "Long-Term Memory", detail: "Pinecone / Chroma vector DB — semantic recall", tag: "MEM" },
+              { name: "Preference Learner", detail: "Behavioral ML model — learns habits silently", tag: "ML" },
+              { name: "Proactive Agent", detail: "Cron-triggered AI — surfaces insights before asking", tag: "AGENT" },
+              { name: "Emotion Detect", detail: "Voice tone analysis — adapts response style", tag: "EQ" },
+              { name: "Identity Vault", detail: "Encrypted local keychain — passwords, IDs, PINs", tag: "SEC" },
+              { name: "Persona Studio", detail: "Customize PKY AI Assistant name, voice, accent, personality", tag: "UX" },
+            ],
+            arch: "Event Stream → Memory Encoder → Retrieval Augment → Personalized Response",
+            kpi: "Truly personal AI · Offline-capable memory"
+          },
+          {
+            id: 5, code: "PHASE-05", title: "Smart Home & IoT", subtitle: "Physical World Control",
+            color: "#d97706", icon: "⬡", eta: "Month 5–6", status: "EXPANSION",
+            modules: [
+              { name: "Home Automation", detail: "Google Home + Home Assistant SDK — lights, locks, thermostats", tag: "IOT" },
+              { name: "MQTT Broker", detail: "Low-latency device mesh — real-time sensor data", tag: "IOT" },
+              { name: "PC Companion", detail: "ADB bridge — control desktop apps", tag: "BRIDGE" },
+              { name: "Wearables Sync", detail: "Wear OS API — glanceable info, biometric triggers", tag: "WEAR" },
+              { name: "Car Mode", detail: "Android Auto integration — drive-safe assistant", tag: "AUTO" },
+              { name: "AR Overlay", detail: "ARCore — floating PKY AI Assistant HUD", tag: "AR" },
+            ],
+            arch: "IoT Mesh ↔ MQTT ↔ PKY AI Assistant Core ↔ Voice + Visual Interface",
+            kpi: "Whole-life automation · Physical + digital unified"
+          }
+        ];
+
+        const techStack = [
+          { layer: "Frontend", tech: "Kotlin + Jetpack Compose", note: "Material 3 · Dark PKY AI Assistant theme" },
+          { layer: "AI Core", tech: "OpenRouter API (free models)", note: "Primary reasoning engine (Any Choice)" },
+          { layer: "Voice STT", tech: "OpenAI Whisper (on-device)", note: "Offline capable" },
+          { layer: "Voice TTS", tech: "Coqui TTS / gTTS (backend)", note: "Neural voice generation" },
+          { layer: "Wake Word", tech: "Picovoice Porcupine", note: "Always-on, low power" },
+          { layer: "Automation", tech: "LangChain + LangGraph", note: "Agentic supervisor patterns" },
+          { layer: "Memory", tech: "ChromaDB + Redis", note: "Local vector + cloud state" },
+          { layer: "Backend", tech: "FastAPI (Python)", note: "Lightweight tool server" },
+          { layer: "Auth & Sec", tech: "Biometric + AES-256", note: "Zero-trust local vault" },
+          { layer: "CI/CD", tech: "GitHub Actions + Firebase", note: "OTA updates" },
+        ];
+
+        const capabilities = [
+          { icon: "◈", label: "Voice Commands", desc: "Natural language, always listening" },
+          { icon: "◈", label: "Proactive Alerts", desc: "Acts before you ask" },
+          { icon: "◈", label: "Multi-Step Plans", desc: "Chains complex tasks autonomously" },
+          { icon: "◈", label: "Offline Mode", desc: "Core features without internet" },
+          { icon: "◈", label: "Screen Awareness", desc: "Sees and acts on anything on screen" },
+          { icon: "◈", label: "Emotion-Aware", desc: "Adapts tone to your mood" },
+          { icon: "◈", label: "Cross-Device", desc: "Phone, PC, wearable, car, home" },
+          { icon: "◈", label: "Total Privacy", desc: "On-device vault, your data stays yours" },
+        ];
+
+        function ScanLine() {
+          return (
+            <div style={{
+              position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+              background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,255,0.015) 2px, rgba(0,212,255,0.015) 4px)",
+              pointerEvents: "none", zIndex: 0
+            }}/>
+          );
+        }
+
+        function HexGrid() {
+            return (
+                <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", opacity: 0.04 }}>
+                    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <pattern id="hex" x="0" y="0" width="60" height="52" patternUnits="userSpaceOnUse">
+                                <polygon points="30,2 58,17 58,47 30,62 2,47 2,17" fill="none" stroke="#00d4ff" strokeWidth="0.8"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#hex)"/>
+                    </svg>
+                </div>
+            );
+        }
+
+        function Pulse({ color }) {
+          return (
+            <span style={{
+              display: "inline-block", width: 8, height: 8, borderRadius: "50%",
+              background: color, boxShadow: `0 0 8px ${color}`,
+              animation: "pulse 2s ease-in-out infinite", flexShrink: 0
+            }}/>
+          );
+        }
+
+        function App() {
+          const [activePhase, setActivePhase] = useState(0);
+          const [tab, setTab] = useState("roadmap");
+          const [booting, setBooting] = useState(true);
+          const [bootLines, setBootLines] = useState([]);
+          const [time, setTime] = useState(new Date());
+          const [models, setModels] = useState(null);
+          const [loadingModels, setLoadingModels] = useState(false);
+
+          const fetchModels = async () => {
+            setLoadingModels(true);
+            try {
+              // Try localhost for browser, fallback to emulator IP
+              const response = await fetch("http://localhost:8000/models").catch(() => 
+                               fetch("http://127.0.0.1:8000/models"));
+              const data = await response.json();
+              setModels(data.models);
+            } catch (err) {
+              console.error("Failed to fetch models", err);
+              alert("Backend not reachable. Ensure FastAPI is running at localhost:8000");
+            } finally {
+              setLoadingModels(false);
+            }
+          };
+
+          const bootSequence = [
+            "PKY AI Assistant OS v4.2.1 — INITIALIZING...",
+            "► Neural core: ONLINE",
+            "► Voice recognition: LOADED",
+            "► System access: GRANTED",
+            "► Memory banks: 128TB INDEXED",
+            "► All systems nominal.",
+            "WELCOME, BOSS. HOW CAN I HELP?",
+          ];
+
+          useEffect(() => {
+            let i = 0;
+            const iv = setInterval(() => {
+              if (i < bootSequence.length) {
+                setBootLines(p => [...p, bootSequence[i]]);
+                i++;
+              } else {
+                clearInterval(iv);
+                setTimeout(() => setBooting(false), 600);
+              }
+            }, 320);
+            return () => clearInterval(iv);
+          }, []);
+
+          useEffect(() => {
+            const iv = setInterval(() => setTime(new Date()), 1000);
+            return () => clearInterval(iv);
+          }, []);
+
+          const phase = phases[activePhase];
+
+          if (booting) {
+            return (
+              <div style={{
+                minHeight: "100vh", background: "#000", display: "flex", alignItems: "center",
+                justifyContent: "center", fontFamily: "'Courier New', monospace", color: "#00d4ff",
+                flexDirection: "column", gap: 12, padding: 32
+              }}>
+                <div style={{ fontSize: 11, letterSpacing: 8, marginBottom: 24, opacity: 0.5 }}>PKY AI Assistant — CLASSIFIED</div>
+                {bootLines.map((l, i) => (
+                  <div key={i} style={{
+                    fontSize: 13, letterSpacing: 2,
+                    color: i === bootLines.length - 1 ? "#00d4ff" : "rgba(0,212,255,0.6)",
+                    opacity: 0, animation: "fadeIn 0.3s forwards",
+                    textShadow: "0 0 10px #00d4ff"
+                  }}>{l}</div>
+                ))}
+              </div>
+            );
+          }
+
+          return (
+            <div style={{
+              minHeight: "100vh",
+              background: "radial-gradient(ellipse at 20% 0%, #0a1628 0%, #050b14 40%, #000 100%)",
+              fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+              color: "#e0f4ff",
+              position: "relative",
+              overflow: "hidden",
+            }}>
+              <ScanLine />
+              <HexGrid />
+
+              {/* TOP BAR */}
+              <div style={{
+                borderBottom: "1px solid rgba(0,212,255,0.15)",
+                padding: "12px 32px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                background: "rgba(0,20,40,0.6)", backdropFilter: "blur(10px)",
+                position: "sticky", top: 0, zIndex: 100,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{
+                    width: 36, height: 36, border: "2px solid #00d4ff",
+                    borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 0 20px rgba(0,212,255,0.4)", fontSize: 14, color: "#00d4ff",
+                    animation: "glow 3s ease-in-out infinite"
+                  }}>M</div>
+                  <div>
+                    <div style={{ fontSize: 13, letterSpacing: 4, color: "#00d4ff", fontWeight: "bold" }}>PKY AI Assistant</div>
+                    <div style={{ fontSize: 9, letterSpacing: 3, color: "rgba(0,212,255,0.5)" }}>PKY AI Assistant CORE SYSTEM</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+                  <div style={{ fontSize: 10, letterSpacing: 2, color: "rgba(0,212,255,0.5)" }}>
+                    {time.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <button onClick={fetchModels} style={{
+                      background: "rgba(0,212,255,0.1)", border: "1px solid rgba(0,212,255,0.3)",
+                      color: "#00d4ff", fontSize: 9, padding: "4px 12px", borderRadius: 4,
+                      cursor: "pointer", transition: "all 0.2s", letterSpacing: 1
+                    }}>
+                      {loadingModels ? "FETCHING..." : "FETCH LIVE MODELS"}
+                    </button>
+                    <Pulse color="#00ff88" />
+                    <span style={{ fontSize: 9, letterSpacing: 2, color: "#00ff88" }}>ALL SYSTEMS ONLINE</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* LIVE MODELS OVERLAY (Optional) */}
+              {models && (
+                <div style={{
+                  position: "fixed", top: 80, right: 32, width: 300, 
+                  background: "rgba(5, 11, 20, 0.95)", border: "1px solid #00d4ff",
+                  borderRadius: 8, padding: 16, zIndex: 1000, backdropFilter: "blur(10px)",
+                  boxShadow: "0 0 30px rgba(0,212,255,0.2)", animation: "slideIn 0.3s ease"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                    <span style={{ fontSize: 10, color: "#00d4ff", letterSpacing: 2 }}>LIVE OPENROUTER MODELS</span>
+                    <button onClick={() => setModels(null)} style={{ background: "none", border: "none", color: "#666", cursor: "pointer" }}>✕</button>
+                  </div>
+                  <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                    {Object.entries(models).map(([key, value]) => (
+                      <div key={key} style={{ marginBottom: 8, padding: 8, background: "rgba(0,212,255,0.05)", borderRadius: 4 }}>
+                        <div style={{ fontSize: 8, color: "rgba(0,212,255,0.4)", marginBottom: 2 }}>{key.replace("_", " ").toUpperCase()}</div>
+                        <div style={{ fontSize: 10, color: "#fff" }}>{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* HERO */}
+              <div style={{ textAlign: "center", padding: "48px 32px 32px", position: "relative" }}>
+                <div style={{ fontSize: 9, letterSpacing: 6, color: "rgba(0,212,255,0.5)", marginBottom: 16 }}>
+                  PKY AI Assistant — PERSONAL AI DIVISION — ANDROID PLATFORM
+                </div>
+                <h1 style={{
+                  fontSize: "clamp(28px,5vw,52px)", letterSpacing: 6,
+                  background: "linear-gradient(135deg, #00d4ff 0%, #a78bfa 50%, #00ff88 100%)",
+                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                  fontWeight: 900, margin: "0 0 8px", textTransform: "uppercase"
+                }}>PKY AI Assistant Android Blueprint</h1>
+                <p style={{ fontSize: 12, letterSpacing: 3, color: "rgba(0,212,255,0.6)", margin: "0 0 32px" }}>
+                  COMPLETE SYSTEM ARCHITECTURE — 5 PHASES — 6 MONTH DEPLOYMENT PLAN
+                </p>
+                <div style={{ display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
+                  {[["5", "CORE PHASES"], ["30+", "MODULES"], ["6 MO", "TIMELINE"], ["∞", "CAPABILITIES"]].map(([v,l]) => (
+                    <div key={l} style={{
+                      border: "1px solid rgba(0,212,255,0.2)", borderRadius: 4,
+                      padding: "12px 20px", background: "rgba(0,212,255,0.05)",
+                      minWidth: 80
+                    }}>
+                      <div style={{ fontSize: 22, color: "#00d4ff", fontWeight: 900, textShadow: "0 0 20px #00d4ff" }}>{v}</div>
+                      <div style={{ fontSize: 8, letterSpacing: 2, color: "rgba(0,212,255,0.5)", marginTop: 4 }}>{l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* TABS */}
+              <div style={{
+                display: "flex", gap: 0, padding: "0 32px",
+                borderBottom: "1px solid rgba(0,212,255,0.1)", marginBottom: 32
+              }}>
+                {[["roadmap","◈ PHASE ROADMAP"],["stack","⬡ TECH STACK"],["capabilities","◆ CAPABILITIES"]].map(([id,label]) => (
+                  <button key={id} className="tab-btn" onClick={() => setTab(id)} style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    padding: "10px 20px", fontSize: 10, letterSpacing: 3,
+                    color: tab === id ? "#00d4ff" : "rgba(0,212,255,0.35)",
+                    borderBottom: tab === id ? "2px solid #00d4ff" : "2px solid transparent",
+                    transition: "all 0.2s", fontFamily: "inherit",
+                    textShadow: tab === id ? "0 0 10px #00d4ff" : "none"
+                  }}>{label}</button>
+                ))}
+              </div>
+
+              {/* ROADMAP TAB */}
+              {tab === "roadmap" && (
+                <div style={{ display: "flex", gap: 0, padding: "0 32px 48px", minHeight: 520 }}>
+                  {/* PHASE SELECTOR */}
+                  <div style={{ width: 220, flexShrink: 0, paddingRight: 24, borderRight: "1px solid rgba(0,212,255,0.1)" }}>
+                    <div style={{ fontSize: 9, letterSpacing: 3, color: "rgba(0,212,255,0.4)", marginBottom: 16 }}>SELECT PHASE</div>
+                    {phases.map((p, i) => (
+                      <button key={p.id} className="phase-btn" onClick={() => setActivePhase(i)} style={{
+                        width: "100%", background: activePhase === i ? `rgba(0,0,0,0.6)` : "transparent",
+                        border: activePhase === i ? `1px solid ${p.color}` : "1px solid transparent",
+                        borderRadius: 4, padding: "10px 14px", cursor: "pointer",
+                        textAlign: "left", marginBottom: 6,
+                        boxShadow: activePhase === i ? `0 0 16px ${p.color}22` : "none",
+                        transition: "all 0.2s", display: "flex", alignItems: "center", gap: 10,
+                      }}>
+                        <span style={{ color: p.color, fontSize: 16 }}>{p.icon}</span>
+                        <div>
+                          <div style={{ fontSize: 10, color: p.color, letterSpacing: 2, fontFamily: "inherit" }}>{p.code}</div>
+                          <div style={{ fontSize: 11, color: activePhase === i ? "#e0f4ff" : "rgba(224,244,255,0.5)", fontFamily: "inherit", marginTop: 2 }}>{p.title}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* PHASE DETAIL */}
+                  <div style={{ flex: 1, paddingLeft: 32, animation: "slideIn 0.3s ease" }} key={activePhase}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 9, letterSpacing: 4, color: phase.color, marginBottom: 6 }}>{phase.code} — {phase.status}</div>
+                        <h2 style={{ fontSize: 24, color: "#fff", margin: "0 0 4px", letterSpacing: 4, textTransform: "uppercase",
+                          textShadow: `0 0 30px ${phase.color}` }}>{phase.title}</h2>
+                        <div style={{ fontSize: 11, color: "rgba(224,244,255,0.5)", letterSpacing: 3 }}>{phase.subtitle}</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 9, letterSpacing: 2, color: "rgba(0,212,255,0.4)" }}>DEPLOYMENT WINDOW</div>
+                        <div style={{ fontSize: 16, color: phase.color, letterSpacing: 3, fontWeight: 900, textShadow: `0 0 15px ${phase.color}` }}>{phase.eta}</div>
+                      </div>
+                    </div>
+
+                    {/* MODULES GRID */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginBottom: 24 }}>
+                      {phase.modules.map((m, i) => (
+                        <div key={i} className="module-card" style={{
+                          border: "1px solid rgba(0,212,255,0.12)", borderRadius: 6,
+                          padding: "14px 16px", background: "rgba(0,212,255,0.03)",
+                          transition: "all 0.2s",
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                            <span style={{ fontSize: 12, color: "#fff", fontWeight: 700, letterSpacing: 1 }}>{m.name}</span>
+                            <span style={{
+                              fontSize: 8, letterSpacing: 1, padding: "2px 8px", borderRadius: 2,
+                              background: `${phase.color}22`, color: phase.color, border: `1px solid ${phase.color}44`
+                            }}>{m.tag}</span>
+                          </div>
+                          <div style={{ fontSize: 10, color: "rgba(224,244,255,0.5)", lineHeight: 1.6, letterSpacing: 0.5 }}>{m.detail}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* ARCH + KPI */}
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                      <div style={{
+                        flex: 1, minWidth: 240,
+                        border: `1px solid ${phase.color}44`, borderRadius: 6,
+                        padding: "14px 16px", background: `${phase.color}08`
+                      }}>
+                        <div style={{ fontSize: 9, letterSpacing: 3, color: phase.color, marginBottom: 8 }}>◈ ARCHITECTURE FLOW</div>
+                        <div style={{ fontSize: 10, color: "rgba(224,244,255,0.7)", letterSpacing: 1, lineHeight: 1.8, fontFamily: "monospace" }}>
+                          {phase.arch}
+                        </div>
+                      </div>
+                      <div style={{
+                        flex: 1, minWidth: 200,
+                        border: "1px solid rgba(0,255,136,0.3)", borderRadius: 6,
+                        padding: "14px 16px", background: "rgba(0,255,136,0.04)"
+                      }}>
+                        <div style={{ fontSize: 9, letterSpacing: 3, color: "#00ff88", marginBottom: 8 }}>◈ SUCCESS METRICS</div>
+                        <div style={{ fontSize: 10, color: "rgba(224,244,255,0.7)", letterSpacing: 0.5, lineHeight: 1.8 }}>
+                          {phase.kpi.split(" · ").map((k, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ color: "#00ff88" }}>▸</span> {k}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TECH STACK TAB */}
+              {tab === "stack" && (
+                <div style={{ padding: "0 32px 48px", animation: "slideIn 0.3s ease" }}>
+                  <div style={{ fontSize: 9, letterSpacing: 4, color: "rgba(0,212,255,0.5)", marginBottom: 24 }}>RECOMMENDED TECHNOLOGY STACK — PRODUCTION GRADE</div>
+                  <div style={{ border: "1px solid rgba(0,212,255,0.12)", borderRadius: 8, overflow: "hidden" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ background: "rgba(0,212,255,0.08)" }}>
+                          {["LAYER", "TECHNOLOGY", "DEPLOYMENT NOTE"].map(h => (
+                            <th key={h} style={{ padding: "12px 20px", textAlign: "left", fontSize: 9, letterSpacing: 3, color: "#00d4ff", borderBottom: "1px solid rgba(0,212,255,0.15)" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {techStack.map((r, i) => (
+                          <tr key={i} className="trow" style={{ borderBottom: "1px solid rgba(0,212,255,0.06)" }}>
+                            <td style={{ padding: "14px 20px" }}>
+                              <span style={{ fontSize: 9, letterSpacing: 2, padding: "3px 10px", background: "rgba(124,58,237,0.2)", color: "#a78bfa", borderRadius: 2, border: "1px solid rgba(124,58,237,0.3)" }}>{r.layer}</span>
+                            </td>
+                            <td style={{ padding: "14px 20px", fontSize: 12, color: "#e0f4ff", letterSpacing: 1 }}>{r.tech}</td>
+                            <td style={{ padding: "14px 20px", fontSize: 10, color: "rgba(224,244,255,0.45)", letterSpacing: 0.5 }}>{r.note}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div style={{ marginTop: 32, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+                    {[
+                      { title: "Android Permissions Required", color: "#dc2626", items: ["RECORD_AUDIO", "BIND_ACCESSIBILITY_SERVICE", "BIND_NOTIFICATION_LISTENER_SERVICE", "READ_CONTACTS", "CALL_PHONE", "SEND_SMS", "SYSTEM_ALERT_WINDOW", "CAMERA"] },
+                      { title: "API Integrations", color: "#059669", items: ["Anthropic Claude API", "Google Calendar + Gmail API", "ElevenLabs TTS API", "OpenAI Whisper", "Google Maps Platform", "Picovoice Porcupine SDK", "Firebase (Auth + Push)", "Pinecone Vector DB"] },
+                      { title: "Security Architecture", color: "#d97706", items: ["AES-256 local encryption", "Biometric vault unlock", "OAuth 2.0 token management", "Zero-trust API gateway", "On-device model inference", "Sandboxed data stores", "Audit trail logging", "Remote wipe capability"] },
+                    ].map(box => (
+                      <div key={box.title} style={{ border: `1px solid ${box.color}33`, borderRadius: 6, padding: 20, background: `${box.color}06` }}>
+                        <div style={{ fontSize: 9, letterSpacing: 3, color: box.color, marginBottom: 14 }}>{box.title}</div>
+                        {box.items.map(item => (
+                          <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 11, color: "rgba(224,244,255,0.7)" }}>
+                            <span style={{ color: box.color, fontSize: 8 }}>▸</span> {item}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* CAPABILITIES TAB */}
+              {tab === "capabilities" && (
+                <div style={{ padding: "0 32px 48px", animation: "slideIn 0.3s ease" }}>
+                  <div style={{ fontSize: 9, letterSpacing: 4, color: "rgba(0,212,255,0.5)", marginBottom: 32 }}>PKY AI Assistant CAPABILITY MATRIX — FULL SYSTEM OVERVIEW</div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px,1fr))", gap: 14, marginBottom: 40 }}>
+                    {capabilities.map((c, i) => (
+                      <div key={i} className="module-card" style={{
+                        border: "1px solid rgba(0,212,255,0.12)", borderRadius: 6, padding: "20px 18px",
+                        background: "rgba(0,212,255,0.03)", transition: "all 0.2s",
+                      }}>
+                        <div style={{ fontSize: 20, color: "#00d4ff", marginBottom: 10, textShadow: "0 0 15px #00d4ff" }}>{c.icon}</div>
+                        <div style={{ fontSize: 13, color: "#fff", fontWeight: 700, letterSpacing: 1, marginBottom: 6 }}>{c.label}</div>
+                        <div style={{ fontSize: 10, color: "rgba(224,244,255,0.45)", letterSpacing: 0.5, lineHeight: 1.6 }}>{c.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* PKY AI Assistant SAMPLE COMMANDS */}
+                  <div style={{ fontSize: 9, letterSpacing: 4, color: "rgba(0,212,255,0.5)", marginBottom: 16 }}>◈ SAMPLE VOICE COMMAND INTERACTIONS</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {[
+                      { q: '"Hey PKY AI Assistant, summarize my emails and tell me what needs urgent attention"', a: "Scanning 47 unread emails... 3 flagged urgent: [CEO reply, bank alert, flight confirmation]. Summarizing now." },
+                      { q: '"Book me a table at the best Italian restaurant near me for 7pm tonight"', a: "Found 3 options within 1.2km. Trattoria Roma has 4.8★ and availability at 7pm. Booking for 2?" },
+                      { q: '"I have a 9am meeting tomorrow. Set an alarm and prepare a briefing doc"', a: "Alarm set for 7:30am. Pulling calendar notes, last emails with attendees, and relevant files. Briefing ready." },
+                      { q: '"Turn off all lights, lock the doors, and play sleep sounds"', a: "Smart home secured. 4 lights off, front door locked. Playing Ambient Rain Mix on Spotify." },
+                    ].map((item, i) => (
+                      <div key={i} style={{ border: "1px solid rgba(0,212,255,0.1)", borderRadius: 6, padding: "14px 18px", background: "rgba(0,0,0,0.3)" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
+                          <span style={{ fontSize: 9, padding: "2px 8px", background: "rgba(0,212,255,0.15)", color: "#00d4ff", borderRadius: 2, flexShrink: 0 }}>YOU</span>
+                          <span style={{ fontSize: 11, color: "rgba(224,244,255,0.8)", fontStyle: "italic", lineHeight: 1.5 }}>{item.q}</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                          <span style={{ fontSize: 9, padding: "2px 8px", background: "rgba(0,255,136,0.15)", color: "#00ff88", borderRadius: 2, flexShrink: 0 }}>PKY AI Assistant</span>
+                          <span style={{ fontSize: 11, color: "rgba(224,244,255,0.6)", lineHeight: 1.5 }}>{item.a}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* TIMELINE */}
+                  <div style={{ marginTop: 40, fontSize: 9, letterSpacing: 4, color: "rgba(0,212,255,0.5)", marginBottom: 20 }}>◈ 6-MONTH DEPLOYMENT TIMELINE</div>
+                  <div style={{ display: "flex", gap: 0, position: "relative" }}>
+                    <div style={{ position: "absolute", top: 16, left: 12, right: 12, height: 1, background: "linear-gradient(90deg, #00d4ff, #7c3aed, #059669, #dc2626, #d97706, #00d4ff)", opacity: 0.3 }}/>
+                    {phases.map((p, i) => (
+                      <div key={i} style={{ flex: 1, textAlign: "center", position: "relative", paddingTop: 8 }}>
+                        <div style={{ width: 14, height: 14, borderRadius: "50%", background: p.color, margin: "0 auto 16px", boxShadow: `0 0 12px ${p.color}`, position: "relative", zIndex: 1 }}/>
+                        <div style={{ fontSize: 9, color: p.color, letterSpacing: 1, marginBottom: 4 }}>{p.eta}</div>
+                        <div style={{ fontSize: 9, color: "rgba(224,244,255,0.5)", letterSpacing: 1, lineHeight: 1.5 }}>{p.title}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* FOOTER */}
+              <div style={{
+                borderTop: "1px solid rgba(0,212,255,0.08)", padding: "16px 32px",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                background: "rgba(0,0,0,0.3)", flexWrap: "wrap", gap: 12
+              }}>
+                <div style={{ fontSize: 9, letterSpacing: 3, color: "rgba(0,212,255,0.3)" }}>
+                  PKY AI Assistant CONFIDENTIAL — PERSONAL AI DIVISION — ANDROID PLATFORM v1.0
+                </div>
+                <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                  <Pulse color="#00d4ff" />
+                  <span style={{ fontSize: 9, letterSpacing: 2, color: "rgba(0,212,255,0.4)" }}>PKY AI Assistant READY FOR DEPLOYMENT</span>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+

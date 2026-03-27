@@ -1,0 +1,64 @@
+# PKY AI Assistant Project — .gitignore
+# Protects all secrets and local files from being committed to GitHub
+
+# ─── ENVIRONMENT & SECRETS ────────────────────────────────
+.env
+.env.local
+*.env
+secrets/
+*.key
+*.pem
+
+# ─── PYTHON ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+*.egg
+.installed.cfg
+
+# ─── DATA & DATABASES ─────────────────────────────────────
+backend/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# ─── ML MODELS ────────────────────────────────────────────
+*.gguf
+*.pt
+*.pth
+*.bin
+
+# ─── LOGS & TEMP ──────────────────────────────────────────
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# ─── IDE ──────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ─── TESTING ──────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ─── ANDROID ──────────────────────────────────────────────
+android/.gradle/
+android/build/
+android/local.properties
+android/app/build/
+android/*.keystore
+*.jks
+
+# ─── NODE / REACT ─────────────────────────────────────────
+node_modules/
+react-app/package-lock.json

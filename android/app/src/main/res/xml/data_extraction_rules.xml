@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="."/>
+        <include domain="file" path="."/>
+        <exclude domain="database" path="."/>
+        <exclude domain="sharedpref" path="pky_ai_auth_prefs.xml"/>
+        <exclude domain="file" path="recording_*.wav"/>
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="."/>
+        <include domain="database" path="."/>
+        <include domain="file" path="."/>
+    </device-transfer>
+</data-extraction-rules>

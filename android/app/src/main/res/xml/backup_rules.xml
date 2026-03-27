@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="sharedpref" path="."/>
+    <include domain="file" path="."/>
+    <exclude domain="sharedpref" path="pky_ai_auth_prefs.xml"/>
+    <exclude domain="database" path="pky_ai_database"/>
+    <exclude domain="database" path="pky_ai_database-wal"/>
+    <exclude domain="database" path="pky_ai_database-shm"/>
+    <exclude domain="database" path="pky_memory.db"/>
+    <exclude domain="file" path="recording_*.wav"/>
+    <exclude domain="file" path="privacy_audit.log"/>
+</full-backup-content>

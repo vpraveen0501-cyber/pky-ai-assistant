@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Synaptics — PKY AI Architecture</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --anthropic-dark: #141413;
+            --anthropic-light: #faf9f5;
+            --anthropic-mid-gray: #b0aea5;
+            --anthropic-light-gray: #e8e6dc;
+            --anthropic-orange: #d97757;
+            --anthropic-blue: #6a9bcc;
+            --anthropic-green: #788c5d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+            min-height: 100vh;
+            color: var(--anthropic-dark);
+        }
+        .container { display: flex; min-height: 100vh; padding: 20px; gap: 20px; }
+        .sidebar {
+            width: 320px; flex-shrink: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(20,20,19,0.1);
+            overflow-y: auto; overflow-x: hidden;
+        }
+        .sidebar h1 { font-family: 'Lora', serif; font-size: 22px; font-weight: 500; color: var(--anthropic-dark); margin-bottom: 6px; }
+        .sidebar .subtitle { color: var(--anthropic-mid-gray); font-size: 12px; margin-bottom: 28px; line-height: 1.5; }
+        .control-section { margin-bottom: 28px; }
+        .control-section h3 { font-size: 14px; font-weight: 600; color: var(--anthropic-dark); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .control-section h3::before { content: '•'; color: var(--anthropic-orange); font-weight: bold; }
+        .seed-input {
+            width: 100%; background: var(--anthropic-light); padding: 10px 12px;
+            border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px;
+            margin-bottom: 10px; border: 1px solid var(--anthropic-light-gray); text-align: center;
+        }
+        .seed-input:focus { outline: none; border-color: var(--anthropic-orange); box-shadow: 0 0 0 2px rgba(217,119,87,0.1); background: white; }
+        .seed-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .control-group { margin-bottom: 18px; }
+        .control-group label { display: block; font-size: 13px; font-weight: 500; color: var(--anthropic-dark); margin-bottom: 7px; }
+        .slider-container { display: flex; align-items: center; gap: 10px; }
+        .slider-container input[type="range"] { flex: 1; height: 4px; background: var(--anthropic-light-gray); border-radius: 2px; outline: none; -webkit-appearance: none; }
+        .slider-container input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; background: var(--anthropic-orange); border-radius: 50%; cursor: pointer; transition: all 0.2s; }
+        .slider-container input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); background: #c86641; }
+        .slider-container input[type="range"]::-moz-range-thumb { width: 15px; height: 15px; background: var(--anthropic-orange); border-radius: 50%; border: none; cursor: pointer; }
+        .value-display { font-family: 'Courier New', monospace; font-size: 11px; color: var(--anthropic-mid-gray); min-width: 38px; text-align: right; }
+        .button {
+            background: var(--anthropic-orange); color: white; border: none;
+            padding: 9px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; width: 100%; font-family: 'Poppins', sans-serif;
+        }
+        .button:hover { background: #c86641; transform: translateY(-1px); }
+        .button:active { transform: translateY(0); }
+        .button.secondary { background: var(--anthropic-blue); }
+        .button.secondary:hover { background: #5a8bb8; }
+        .button.tertiary { background: var(--anthropic-green); }
+        .button.tertiary:hover { background: #6b7b52; }
+        .button.dark { background: #2a2e3e; }
+        .button.dark:hover { background: #1a1e2e; }
+        .button-row { display: flex; gap: 8px; }
+        .button-row .button { flex: 1; }
+        .canvas-area { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
+        #canvas-container {
+            width: 100%; max-width: 900px; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(20,20,19,0.25); background: #080c1a;
+        }
+        #canvas-container canvas { display: block; width: 100% !important; height: auto !important; }
+        .loading { display: flex; align-items: center; justify-content: center; padding: 200px 0; font-size: 16px; color: #6a9bcc; background: #080c1a; }
+        .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+        .legend-item { font-size: 11px; color: var(--anthropic-mid-gray); margin-bottom: 5px; display: flex; align-items: center; }
+        @media (max-width: 700px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h1>Cognitive Synaptics</h1>
+        <div class="subtitle">PKY AI — Multi-Agent Architecture<br>Algorithms &amp; Data Structures Visualized</div>
+
+        <!-- Seed -->
+        <div class="control-section">
+            <h3>Seed</h3>
+            <input type="number" id="seed-input" class="seed-input" value="42" onchange="updateSeed()">
+            <div class="seed-controls">
+                <button class="button secondary" onclick="previousSeed()">← Prev</button>
+                <button class="button secondary" onclick="nextSeed()">Next →</button>
+            </div>
+            <button class="button tertiary" onclick="randomSeedAndUpdate()">↻ Random</button>
+        </div>
+
+        <!-- Parameters -->
+        <div class="control-section">
+            <h3>Parameters</h3>
+
+            <div class="control-group">
+                <label>Particle Speed</label>
+                <div class="slider-container">
+                    <input type="range" id="particleSpeed" min="0.3" max="3.0" step="0.1" value="1.0" oninput="updateParam('particleSpeed', this.value)">
+                    <span class="value-display" id="particleSpeed-value">1.0</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Glow Intensity</label>
+                <div class="slider-container">
+                    <input type="range" id="glowIntensity" min="0.2" max="2.5" step="0.1" value="1.0" oninput="updateParam('glowIntensity', this.value)">
+                    <span class="value-display" id="glowIntensity-value">1.0</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Connection Visibility</label>
+                <div class="slider-container">
+                    <input type="range" id="connectionVis" min="0.1" max="1.5" step="0.05" value="0.7" oninput="updateParam('connectionVis', this.value)">
+                    <span class="value-display" id="connectionVis-value">0.70</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Flow Rate</label>
+                <div class="slider-container">
+                    <input type="range" id="flowRate" min="0.3" max="4.0" step="0.1" value="1.0" oninput="updateParam('flowRate', this.value)">
+                    <span class="value-display" id="flowRate-value">1.0</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Node Drift</label>
+                <div class="slider-container">
+                    <input type="range" id="nodeDrift" min="0" max="18" step="1" value="6" oninput="updateParam('nodeDrift', this.value)">
+                    <span class="value-display" id="nodeDrift-value">6</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Background Stars</label>
+                <div class="slider-container">
+                    <input type="range" id="bgDensity" min="50" max="500" step="10" value="200" oninput="updateParam('bgDensity', this.value)">
+                    <span class="value-display" id="bgDensity-value">200</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="control-section">
+            <h3>Architecture Map</h3>
+            <div class="legend-item"><span class="legend-dot" style="background:#d97757;"></span>LangGraph Supervisor</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#00c5bf;"></span>Voice Pipeline (Whisper · Kokoro)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#6a9bcc;"></span>Vector Search (ChromaDB HNSW)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#f0c040;"></span>Knowledge Graph (Neo4j · Cypher)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#788c5d;"></span>Task Planner (SQL · Redis)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#9b7fd4;"></span>Web Automation (Playwright)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#e8694a;"></span>Multi-Agent Researcher</div>
+        </div>
+
+        <!-- Actions -->
+        <div class="control-section">
+            <h3>Actions</h3>
+            <div class="button-row" style="margin-bottom:8px;">
+                <button class="button dark" onclick="togglePause()">⏸ Pause</button>
+                <button class="button" onclick="downloadCanvas()">⬇ Save PNG</button>
+            </div>
+            <button class="button secondary" onclick="resetParameters()">↺ Reset Params</button>
+        </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-area">
+        <div id="canvas-container">
+            <div class="loading">Initializing Cognitive Synaptics...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// PARAMETERS
+// ═══════════════════════════════════════════════
+let params = {
+    seed: 42,
+    particleSpeed: 1.0,
+    glowIntensity: 1.0,
+    connectionVis: 0.70,
+    flowRate: 1.0,
+    nodeDrift: 6,
+    bgDensity: 200
+};
+let defaultParams = { ...params };
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let nodes = [];
+let particles = [];
+let bgStars = [];
+let voiceRipples = [];
+let connections = [];
+let frameCounter = 0;
+let paused = false;
+let p5instance = null;
+
+// Node color palette [r, g, b]
+const COLORS = {
+    supervisor: [217, 119,  87],   // Anthropic amber
+    voice:      [  0, 197, 191],   // Teal
+    vector:     [106, 155, 204],   // Sky blue
+    knowledge:  [240, 192,  64],   // Gold
+    planner:    [120, 140,  93],   // Sage green
+    automation: [155, 127, 212],   // Violet
+    researcher: [232, 105,  74],   // Coral
+};
+
+// ═══════════════════════════════════════════════
+// NODE CLASS
+// ═══════════════════════════════════════════════
+class AgentNode {
+    constructor(bx, by, label, sublabel, col, radius, type, id) {
+        this.baseX = bx; this.baseY = by;
+        this.x = bx;    this.y = by;
+        this.label = label;
+        this.sublabel = sublabel;
+        this.col = col;
+        this.radius = radius;
+        this.type = type;
+        this.id = id;
+        this.activity = p5instance.random(0.3, 0.7);
+        this.pulsePhase = p5instance.random(p5instance.TWO_PI);
+        this.floatPhase = p5instance.random(p5instance.TWO_PI);
+        this.floatSpeed = p5instance.random(0.007, 0.014);
+    }
+
+    update() {
+        this.pulsePhase += 0.038;
+        this.floatPhase += this.floatSpeed;
+        let amp = params.nodeDrift;
+        this.x = this.baseX + p5instance.sin(this.floatPhase) * amp;
+        this.y = this.baseY + p5instance.cos(this.floatPhase * 0.71) * amp * 0.85;
+        this.activity = p5instance.lerp(this.activity, 0.18, 0.0025);
+    }
+
+    activate(boost) {
+        boost = boost || 0.5;
+        this.activity = p5instance.min(1.0, this.activity + boost);
+    }
+
+    draw(pg) {
+        let p = pg || p5instance;
+        let [r, g, b] = this.col;
+        let gi = params.glowIntensity;
+        let pulse = 1 + p.sin(this.pulsePhase) * 0.07;
+        let act = this.activity;
+        let rad = this.radius * pulse;
+
+        // Outer glow layers
+        p.noStroke();
+        for (let layer = 7; layer >= 1; layer--) {
+            let gr = rad * (1.1 + layer * 0.28 * act * gi);
+            let alpha = (8 - layer) * 9 * gi * act;
+            p.fill(r, g, b, alpha);
+            p.ellipse(this.x, this.y, gr * 2, gr * 2);
+        }
+
+        // Dark fill circle
+        p.fill(r * 0.12, g * 0.12, b * 0.12, 230);
+        p.noStroke();
+        p.ellipse(this.x, this.y, rad * 2, rad * 2);
+
+        // Colored ring
+        p.noFill();
+        p.stroke(r, g, b, 190 + act * 60);
+        p.strokeWeight(this.type === 'supervisor' ? 2.5 : 1.8);
+        p.ellipse(this.x, this.y, rad * 2, rad * 2);
+
+        // Inner activity ring
+        p.stroke(r, g, b, 80 * act * gi);
+        p.strokeWeight(5 * act);
+        p.ellipse(this.x, this.y, rad * 1.4, rad * 1.4);
+
+        // Center dot
+        p.noStroke();
+        p.fill(255, 255, 255, 160 + act * 90);
+        let dotSize = this.type === 'supervisor' ? 11 : 7;
+        p.ellipse(this.x, this.y, dotSize, dotSize);
+
+        // Label
+        p.textAlign(p.CENTER, p.CENTER);
+        p.noStroke();
+        p.textSize(this.type === 'supervisor' ? 12 : 9.5);
+        p.textStyle(p.BOLD);
+        p.fill(255, 255, 255, 230);
+        p.text(this.label, this.x, this.y - 7);
+        if (this.sublabel) {
+            p.textStyle(p.NORMAL);
+            p.textSize(7.5);
+            p.fill(r + 80, g + 80, b + 80, 190);
+            p.text(this.sublabel, this.x, this.y + 8);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════
+// DATA PARTICLE CLASS
+// ═══════════════════════════════════════════════
+class DataParticle {
+    constructor(fromIdx, toIdx) {
+        this.fromIdx = fromIdx;
+        this.toIdx = toIdx;
+        let fn = nodes[fromIdx];
+        let tn = nodes[toIdx];
+        this.t = 0;
+        this.speed = (0.003 + p5instance.random(0.007)) * params.particleSpeed;
+        this.size = p5instance.random(2.5, 5.5);
+        this.trail = [];
+        this.maxTrail = p5instance.floor(p5instance.random(7, 14));
+
+        // Blend color source→target
+        let fr = fn.col[0], fg = fn.col[1], fb = fn.col[2];
+        let tr = tn.col[0], tg = tn.col[1], tb = tn.col[2];
+        this.cr = (fr + tr) / 2 + p5instance.random(-15, 15);
+        this.cg = (fg + tg) / 2 + p5instance.random(-15, 15);
+        this.cb = (fb + tb) / 2 + p5instance.random(-15, 15);
+
+        // Bézier control point (perpendicular offset)
+        let midX = (fn.baseX + tn.baseX) / 2;
+        let midY = (fn.baseY + tn.baseY) / 2;
+        let dx = tn.baseX - fn.baseX;
+        let dy = tn.baseY - fn.baseY;
+        let len = p5instance.sqrt(dx * dx + dy * dy);
+        let px = -dy / len; let py = dx / len;
+        let offset = p5instance.random(-100, 100);
+        this.cpOffX = midX + px * offset;
+        this.cpOffY = midY + py * offset;
+    }
+
+    update() {
+        this.t += this.speed;
+        let fn = nodes[this.fromIdx];
+        let tn = nodes[this.toIdx];
+        // Quadratic bézier with floating node positions
+        let t = this.t;
+        let cpX = this.cpOffX + fn.x * 0.0 + tn.x * 0.0; // control stays fixed
+        let cpY = this.cpOffY;
+        // Recalculate control relative to current node positions
+        let midX = (fn.x + tn.x) / 2;
+        let midY = (fn.y + tn.y) / 2;
+        let bx = midX + (this.cpOffX - (nodes[this.fromIdx].baseX + nodes[this.toIdx].baseX) / 2);
+        let by = midY + (this.cpOffY - (nodes[this.fromIdx].baseY + nodes[this.toIdx].baseY) / 2);
+
+        let x = (1 - t) * (1 - t) * fn.x + 2 * (1 - t) * t * bx + t * t * tn.x;
+        let y = (1 - t) * (1 - t) * fn.y + 2 * (1 - t) * t * by + t * t * tn.y;
+        this.trail.unshift({ x, y });
+        if (this.trail.length > this.maxTrail) this.trail.pop();
+        if (this.t >= 1.0) {
+            nodes[this.toIdx].activate(0.35 + p5instance.random(0.4));
+            return true;
+        }
+        return false;
+    }
+
+    draw() {
+        let p = p5instance;
+        for (let i = 0; i < this.trail.length; i++) {
+            let alpha = p.map(i, 0, this.trail.length - 1, 220, 0);
+            let s = p.map(i, 0, this.trail.length - 1, this.size, 0.3);
+            p.noStroke();
+            p.fill(this.cr, this.cg, this.cb, alpha);
+            p.ellipse(this.trail[i].x, this.trail[i].y, s, s);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════
+// VOICE RIPPLE CLASS
+// ═══════════════════════════════════════════════
+class VoiceRipple {
+    constructor(x, y, col) {
+        this.x = x; this.y = y;
+        this.r = 0; this.maxR = 180;
+        this.speed = 2.5;
+        this.col = col;
+        this.alpha = 200;
+    }
+    update() {
+        this.r += this.speed;
+        this.alpha = p5instance.map(this.r, 0, this.maxR, 160, 0);
+        return this.r > this.maxR;
+    }
+    draw() {
+        let p = p5instance;
+        let [r, g, b] = this.col;
+        p.noFill();
+        p.stroke(r, g, b, this.alpha * params.glowIntensity);
+        p.strokeWeight(1.5);
+        p.ellipse(this.x, this.y, this.r * 2, this.r * 2);
+        // Inner ring
+        if (this.r > 30) {
+            p.stroke(r, g, b, this.alpha * 0.4 * params.glowIntensity);
+            p.strokeWeight(0.8);
+            p.ellipse(this.x, this.y, (this.r - 20) * 2, (this.r - 20) * 2);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════
+// P5.JS SKETCH
+// ═══════════════════════════════════════════════
+new p5(function(p) {
+    p5instance = p;
+
+    p.setup = function() {
+        let cnv = p.createCanvas(1200, 1200);
+        cnv.parent('canvas-container');
+        document.querySelector('.loading').style.display = 'none';
+        p.textFont('Arial');
+        initializeSystem();
+    };
+
+    p.draw = function() {
+        if (paused) return;
+
+        // Deep space background
+        p.background(8, 12, 26);
+
+        // Radial background gradient
+        drawBackgroundGlow(p);
+
+        // Background star field
+        drawBgStars(p);
+
+        // Connection lines
+        drawConnections(p);
+
+        // Voice ripples
+        for (let i = voiceRipples.length - 1; i >= 0; i--) {
+            let done = voiceRipples[i].update();
+            voiceRipples[i].draw();
+            if (done) voiceRipples.splice(i, 1);
+        }
+
+        // Data particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let done = particles[i].update();
+            particles[i].draw();
+            if (done) particles.splice(i, 1);
+        }
+
+        // Nodes (drawn on top)
+        for (let node of nodes) {
+            node.update();
+            node.draw();
+        }
+
+        // Spawn logic
+        spawnParticles(p);
+
+        // Canvas title
+        drawCanvasTitle(p);
+
+        frameCounter++;
+    };
+
+    // ─────────────────────────────────────────────
+    function initializeSystem() {
+        p.randomSeed(params.seed);
+        p.noiseSeed(params.seed);
+        particles = [];
+        voiceRipples = [];
+        frameCounter = 0;
+
+        // Hexagonal node positions centered at 600,600 with radius 320
+        const cx = 600, cy = 600, R = 305;
+        nodes = [
+            new AgentNode(cx,             cy,             'LangGraph',      'Supervisor',       COLORS.supervisor, 56, 'supervisor', 0),
+            new AgentNode(cx,             cy - R,         'Voice Pipeline', 'Whisper · Kokoro', COLORS.voice,      40, 'agent',      1),
+            new AgentNode(cx + R*0.866,   cy - R*0.5,     'Vector Search',  'ChromaDB · HNSW',  COLORS.vector,     40, 'agent',      2),
+            new AgentNode(cx + R*0.866,   cy + R*0.5,     'Knowledge Graph','Neo4j · Cypher',   COLORS.knowledge,  40, 'agent',      3),
+            new AgentNode(cx,             cy + R,         'Task Planner',   'SQL · Redis',      COLORS.planner,    40, 'agent',      4),
+            new AgentNode(cx - R*0.866,   cy + R*0.5,     'Web Automation', 'Playwright',       COLORS.automation, 40, 'agent',      5),
+            new AgentNode(cx - R*0.866,   cy - R*0.5,     'Multi-Agent',    'Researcher',       COLORS.researcher, 40, 'agent',      6),
+        ];
+
+        // Connections: supervisor→each + ring between satellites
+        connections = [
+            { from:0, to:1, phase:0.0 }, { from:0, to:2, phase:1.1 },
+            { from:0, to:3, phase:2.2 }, { from:0, to:4, phase:3.3 },
+            { from:0, to:5, phase:4.4 }, { from:0, to:6, phase:5.5 },
+            { from:1, to:2, phase:0.5 }, { from:2, to:3, phase:1.3 },
+            { from:3, to:4, phase:2.1 }, { from:4, to:5, phase:2.9 },
+            { from:5, to:6, phase:3.7 }, { from:6, to:1, phase:4.5 },
+        ];
+
+        // Background stars
+        bgStars = [];
+        for (let i = 0; i < params.bgDensity; i++) {
+            bgStars.push({
+                x: p.random(1200), y: p.random(1200),
+                size: p.random(0.8, 2.5),
+                alpha: p.random(15, 65),
+                twinklePhase: p.random(p.TWO_PI),
+                twinkleSpeed: p.random(0.005, 0.025),
+                vx: p.random(-0.08, 0.08), vy: p.random(-0.08, 0.08),
+            });
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    function drawBackgroundGlow(p) {
+        // Soft radial gradient behind center
+        for (let layer = 8; layer >= 1; layer--) {
+            let r = layer * 90;
+            let alpha = (9 - layer) * 2.5;
+            p.noStroke();
+            p.fill(20, 30, 70, alpha);
+            p.ellipse(600, 600, r * 2, r * 2);
+        }
+        // Subtle hex-shaped accent glows at node positions
+        for (let n of nodes) {
+            if (n.type === 'agent') {
+                let [r, g, b] = n.col;
+                p.noStroke();
+                p.fill(r, g, b, 4);
+                p.ellipse(n.baseX, n.baseY, 200, 200);
+            }
+        }
+    }
+
+    function drawBgStars(p) {
+        p.noStroke();
+        for (let s of bgStars) {
+            s.x += s.vx; s.y += s.vy;
+            s.twinklePhase += s.twinkleSpeed;
+            if (s.x < 0) s.x = 1200; if (s.x > 1200) s.x = 0;
+            if (s.y < 0) s.y = 1200; if (s.y > 1200) s.y = 0;
+            let tw = p.map(p.sin(s.twinklePhase), -1, 1, 0.5, 1.5);
+            p.fill(200, 210, 240, s.alpha * tw);
+            p.ellipse(s.x, s.y, s.size * tw, s.size * tw);
+        }
+    }
+
+    function drawConnections(p) {
+        for (let c of connections) {
+            let fn = nodes[c.from];
+            let tn = nodes[c.to];
+            let [fr, fg, fb] = fn.col;
+            let [tr, tg, tb] = tn.col;
+            let mr = (fr + tr) / 2, mg = (fg + tg) / 2, mb = (fb + tb) / 2;
+
+            let pulse = p.map(p.sin(frameCounter * 0.016 + c.phase), -1, 1, 20, 55);
+            let baseAlpha = pulse * params.connectionVis;
+
+            // Draw gradient-ish connection using two half-beziers
+            let midX = (fn.x + tn.x) / 2;
+            let midY = (fn.y + tn.y) / 2;
+            let dx = tn.x - fn.x, dy = tn.y - fn.y;
+            let cpX = midX - dy * 0.1, cpY = midY + dx * 0.1;
+
+            // Full curve in blended color
+            p.noFill();
+            p.stroke(mr, mg, mb, baseAlpha);
+            p.strokeWeight(1.2);
+            p.beginShape();
+            p.vertex(fn.x, fn.y);
+            p.quadraticVertex(cpX, cpY, tn.x, tn.y);
+            p.endShape();
+
+            // Source-color half
+            p.stroke(fr, fg, fb, baseAlpha * 0.7);
+            p.strokeWeight(0.8);
+            p.beginShape();
+            p.vertex(fn.x, fn.y);
+            p.quadraticVertex(cpX, cpY, midX, midY);
+            p.endShape();
+
+            // Target-color half
+            p.stroke(tr, tg, tb, baseAlpha * 0.7);
+            p.beginShape();
+            p.vertex(midX, midY);
+            p.quadraticVertex(cpX, cpY, tn.x, tn.y);
+            p.endShape();
+        }
+    }
+
+    function spawnParticles(p) {
+        let interval = p.floor(50 / params.flowRate);
+        if (interval < 5) interval = 5;
+
+        if (frameCounter % interval === 0) {
+            // Supervisor sends a burst to a random satellite
+            let target = p.floor(p.random(1, 7));
+            let count = p.floor(p.random(2, 5));
+            for (let i = 0; i < count; i++) {
+                particles.push(new DataParticle(0, target));
+            }
+            // Satellite sends one back
+            let src = p.floor(p.random(1, 7));
+            particles.push(new DataParticle(src, 0));
+        }
+
+        // Ring traffic: adjacent agents communicate
+        if (frameCounter % p.floor(80 / params.flowRate + 5) === 7) {
+            let ring = [1, 2, 3, 4, 5, 6];
+            let idx = p.floor(p.random(ring.length));
+            let nextIdx = (idx + 1) % ring.length;
+            particles.push(new DataParticle(ring[idx], ring[nextIdx]));
+        }
+
+        // Voice ripples periodically from voice node
+        if (frameCounter % 90 === 0) {
+            let vn = nodes[1];
+            voiceRipples.push(new VoiceRipple(vn.x, vn.y, vn.col));
+            if (voiceRipples.length > 8) voiceRipples.shift();
+        }
+
+        // Knowledge graph pulse ripple
+        if (frameCounter % 130 === 40) {
+            let kn = nodes[3];
+            voiceRipples.push(new VoiceRipple(kn.x, kn.y, kn.col));
+        }
+    }
+
+    function drawCanvasTitle(p) {
+        // Subtle header at bottom of canvas
+        p.noStroke();
+        p.fill(255, 255, 255, 30);
+        p.rect(0, 1130, 1200, 70);
+
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textSize(18);
+        p.textStyle(p.BOLD);
+        p.fill(255, 255, 255, 120);
+        p.text('PKY AI', 600, 1150);
+
+        p.textSize(10);
+        p.textStyle(p.NORMAL);
+        p.fill(180, 190, 220, 80);
+        p.text('Cognitive Synaptics  ·  Multi-Agent Architecture  ·  LangGraph · ChromaDB · Neo4j · FastAPI · Kotlin', 600, 1170);
+
+        // Subtle top badge
+        p.textAlign(p.LEFT, p.CENTER);
+        p.textSize(9);
+        p.fill(170, 185, 220, 55);
+        p.text('github.com/PKY-AI', 22, 22);
+
+        p.textAlign(p.RIGHT, p.CENTER);
+        p.fill(170, 185, 220, 55);
+        p.text('Algorithms & Data Structures', 1178, 22);
+    }
+
+    // expose p5 instance globally
+    window._p5 = p;
+});
+
+// ═══════════════════════════════════════════════
+// UI HANDLERS
+// ═══════════════════════════════════════════════
+function updateParam(name, value) {
+    let v = parseFloat(value);
+    params[name] = v;
+    let display = document.getElementById(name + '-value');
+    if (display) display.textContent = v.toFixed(name === 'connectionVis' ? 2 : (v % 1 === 0 ? 0 : 1));
+
+    // If bgDensity changed, reinit (star count)
+    if (name === 'bgDensity') {
+        reinitSystem();
+    }
+}
+
+function reinitSystem() {
+    if (!p5instance) return;
+    p5instance.randomSeed(params.seed);
+    p5instance.noiseSeed(params.seed);
+    particles = [];
+    voiceRipples = [];
+    frameCounter = 0;
+    bgStars = [];
+    for (let i = 0; i < params.bgDensity; i++) {
+        bgStars.push({
+            x: p5instance.random(1200), y: p5instance.random(1200),
+            size: p5instance.random(0.8, 2.5),
+            alpha: p5instance.random(15, 65),
+            twinklePhase: p5instance.random(p5instance.TWO_PI),
+            twinkleSpeed: p5instance.random(0.005, 0.025),
+            vx: p5instance.random(-0.08, 0.08), vy: p5instance.random(-0.08, 0.08),
+        });
+    }
+}
+
+function updateSeedDisplay() {
+    document.getElementById('seed-input').value = params.seed;
+}
+
+function updateSeed() {
+    let v = parseInt(document.getElementById('seed-input').value);
+    if (v && v > 0) { params.seed = v; reinitSystem(); }
+    else updateSeedDisplay();
+}
+
+function previousSeed() {
+    params.seed = Math.max(1, params.seed - 1);
+    updateSeedDisplay(); reinitSystem();
+}
+
+function nextSeed() {
+    params.seed++;
+    updateSeedDisplay(); reinitSystem();
+}
+
+function randomSeedAndUpdate() {
+    params.seed = Math.floor(Math.random() * 99999) + 1;
+    updateSeedDisplay(); reinitSystem();
+}
+
+function togglePause() {
+    paused = !paused;
+    document.querySelector('.button.dark').textContent = paused ? '▶ Play' : '⏸ Pause';
+}
+
+function downloadCanvas() {
+    if (window._p5) window._p5.saveCanvas('pky-ai-cognitive-synaptics', 'png');
+}
+
+function resetParameters() {
+    params = { ...defaultParams };
+    document.getElementById('particleSpeed').value = params.particleSpeed;
+    document.getElementById('particleSpeed-value').textContent = params.particleSpeed.toFixed(1);
+    document.getElementById('glowIntensity').value = params.glowIntensity;
+    document.getElementById('glowIntensity-value').textContent = params.glowIntensity.toFixed(1);
+    document.getElementById('connectionVis').value = params.connectionVis;
+    document.getElementById('connectionVis-value').textContent = params.connectionVis.toFixed(2);
+    document.getElementById('flowRate').value = params.flowRate;
+    document.getElementById('flowRate-value').textContent = params.flowRate.toFixed(1);
+    document.getElementById('nodeDrift').value = params.nodeDrift;
+    document.getElementById('nodeDrift-value').textContent = params.nodeDrift;
+    document.getElementById('bgDensity').value = params.bgDensity;
+    document.getElementById('bgDensity-value').textContent = params.bgDensity;
+    updateSeedDisplay();
+    reinitSystem();
+}
+
+window.addEventListener('load', function() { updateSeedDisplay(); });
+</script>
+</body>
+</html>

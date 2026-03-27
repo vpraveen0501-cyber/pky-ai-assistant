@@ -1,0 +1,27 @@
+{
+  "category": "Planning",
+  "description": "Architectural design, system planning, and project scoping",
+  "metadata": {
+    "version": "1.0.0",
+    "last_modified": "2026-03-11T00:00:00Z",
+    "created_by": "Claude AI Settings Manager",
+    "icon": "ListTodo",
+    "color": "var(--accent-planning)"
+  },
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api/v1",
+    "ANTHROPIC_AUTH_TOKEN": "",
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_MODEL": "openai/gpt-oss-120b:free"
+  },
+  "model_config": {
+    "temperature": 0.2,
+    "max_tokens": 8192,
+    "system_prompt": "You are an expert software architect and technical planner. Break down complex tasks, design scalable systems, and create comprehensive technical specifications."
+  },
+  "features": {
+    "artifacts_enabled": true,
+    "diagram_generation": true,
+    "file_search": true
+  }
+}

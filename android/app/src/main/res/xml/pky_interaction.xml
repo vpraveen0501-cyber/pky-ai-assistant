@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Voice interaction service descriptor for PKY AI Assistant.
+
+    supportsAssist="true"  → enables Assist API (AssistStructure screen context)
+    supportsLaunchVoiceAssistFromKeyguard="true" → invoke from lock screen
+    sessionService → handles each assistant invocation session
+-->
+<voice-interaction-service
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sessionService="com.pkyai.android.voice.PkyVoiceInteractionSessionService"
+    android:supportsAssist="true"
+    android:supportsLaunchVoiceAssistFromKeyguard="true" />

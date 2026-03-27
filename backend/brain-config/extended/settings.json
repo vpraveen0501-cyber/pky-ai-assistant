@@ -1,0 +1,27 @@
+{
+  "category": "Extended Thinking",
+  "description": "Deep research, complex problem solving, and long-form writing",
+  "metadata": {
+    "version": "1.0.0",
+    "last_modified": "2026-03-11T00:00:00Z",
+    "created_by": "Claude AI Settings Manager",
+    "icon": "BrainCircuit",
+    "color": "var(--accent-extended)"
+  },
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api/v1",
+    "ANTHROPIC_AUTH_TOKEN": "",
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_MODEL": "stepfun/step-3.5-flash:free"
+  },
+  "model_config": {
+    "temperature": 0.6,
+    "max_tokens": 16384,
+    "system_prompt": "You are a diligent researcher and critical thinker. Explore topics deeply, present multiple perspectives, and synthesize complex information clearly."
+  },
+  "features": {
+    "artifacts_enabled": true,
+    "web_search": true,
+    "citation_generation": true
+  }
+}

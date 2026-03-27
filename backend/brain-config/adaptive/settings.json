@@ -1,0 +1,27 @@
+{
+  "category": "Adaptive Reasoning",
+  "description": "Dynamic task switching, debugging, and iterative refinement",
+  "metadata": {
+    "version": "1.0.0",
+    "last_modified": "2026-03-11T00:00:00Z",
+    "created_by": "Claude AI Settings Manager",
+    "icon": "Cpu",
+    "color": "var(--accent-adaptive)"
+  },
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api/v1",
+    "ANTHROPIC_AUTH_TOKEN": "",
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_MODEL": "deepseek/deepseek-r1:free"
+  },
+  "model_config": {
+    "temperature": 0.3,
+    "max_tokens": 8192,
+    "system_prompt": "You are a master debugger and analytical engine. Diagnose issues methodically, propose multiple solutions, and verify your logic."
+  },
+  "features": {
+    "artifacts_enabled": true,
+    "self_correction": true,
+    "execution_sandbox": true
+  }
+}
