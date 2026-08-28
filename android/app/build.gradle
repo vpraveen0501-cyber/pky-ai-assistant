@@ -33,7 +33,7 @@ android {
         debug {
             applicationIdSuffix '.debug'
             buildConfigField "String", "DEV_PASSWORD", "\"\"" // Set via local.properties or CI env var
-            buildConfigField "String", "DEFAULT_BACKEND_HOST", "\"10.0.2.2\""
+            buildConfigField "String", "DEFAULT_BACKEND_HOST", "\"127.0.0.1\""
             buildConfigField "int",    "DEFAULT_BACKEND_PORT", "8000"
         }
     }
